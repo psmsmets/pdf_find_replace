@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Check input arguments
+if [ "$#" -lt 2 ] ; then
+    echo "$(tput setaf 1)We need at least 2 arguments!"
+    echo "SYNTAX  ./pdf_find_replace <input-file> <find> [<replace> <output-file>]"
+    echo "Optional :"
+    echo "  <replace> is by default empty"
+    echo "  <output-file> is by default \"mod_<input-file>\""
+    echo "Note: sed delimiter is set to \"|\" and cannot be used in <find> and <replace> strings.$(tput sgr 0)"
+    exit 0
+else
+    i=$1
+    f=$2
+fi
+
+if [ "$#" -lt 3 ] ; then
+    r=""
+else
+    r=$3
+fi
+
+if [ "$#" -lt 4 ] ; then
+    o="mod_$1"
+else
+    o=$4
+fi
+
+# Start message
+printf "$(tput setaf 4)PDF Find Replace$(tput sgr 0)\n"
+
+# Temp Files
+u=".uncomp_$1"
+m=".uncomp_mod_$1"
+c=".comp_mod_$1"
+
+# Uncompress
+printf "$(tput setaf 4)-> Uncompress pdf $1 $(tput sgr 0)\n"
+pdftk $1 output $u uncompress
+
+# Replace text
+printf "$(tput setaf 4)-> Find \"$f\" \n-> Replace \"$r\"$(tput sgr 0)\n"
+LC_ALL=C sed -E -e "s|$f|$r|g" $u > $m
+
+# Compress
+printf "$(tput setaf 4)-> Compress pdf $(tput sgr 0)\n"
+pdftk $m output $c compress
+
+# Cleanup 
+printf "$(tput setaf 4)-> Set output file to $o and cleanup. $(tput sgr 0)\n"
+mv $c $o
+rm $u $m
+
+printf "$(tput setaf 4)Replacing text successful :)$(tput sgr 0)\n"
+exit 0
